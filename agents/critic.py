@@ -1,3 +1,6 @@
+import keras.backend as K
+from keras import layers, models, optimizers, regularizers
+
 class Critic:
     """Critic (Value) Model."""
 
@@ -15,6 +18,8 @@ class Critic:
         # Initialize any other variables here
 
         self.build_model()
+    #delete in the future
+ 
 
     def build_model(self):
         """Build a critic (value) network that maps (state, action) pairs -> Q-values."""
@@ -23,8 +28,8 @@ class Critic:
         actions = layers.Input(shape=(self.action_size,), name='actions')
 
         # Add hidden layer(s) for state pathway
-        net_states = layers.Dense(units=32, activation='relu')(states)
-        net_states = layers.Dense(units=64, activation='relu')(net_states)
+        net_states = layers.Dense(units=32, activation='relu', kernel_regularizer=regularizers.l2(0.005))(states)
+        net_states = layers.Dense(units=64, activation='relu', kernel_regularizer=regularizers.l2(0.005))(net_states)
 
         # Add hidden layer(s) for action pathway
         net_actions = layers.Dense(units=32, activation='relu')(actions)
@@ -45,7 +50,7 @@ class Critic:
         self.model = models.Model(inputs=[states, actions], outputs=Q_values)
 
         # Define optimizer and compile model for training with built-in loss function
-        optimizer = optimizers.Adam()
+        optimizer = optimizers.Adam(lr=0.005)
         self.model.compile(optimizer=optimizer, loss='mse')
 
         # Compute action gradients (derivative of Q values w.r.t. to actions)

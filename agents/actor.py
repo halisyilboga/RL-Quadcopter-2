@@ -1,10 +1,10 @@
-from keras import layers, models, optimizers
+from keras import layers, models, optimizers, regularizers
 from keras import backend as K
 
 class Actor:
     """Actor (Policy) Model."""
 
-    def __init__(self, state_size, action_size, action_low, action_high):
+    def __init__(self, state_size, action_size, action_high,action_low):
         """Initialize parameters and build model.
 
         Params
@@ -16,9 +16,10 @@ class Actor:
         """
         self.state_size = state_size
         self.action_size = action_size
+
         self.action_low = action_low
         self.action_high = action_high
-        self.action_range = self.action_high - self.action_low
+        self.action_range =  action_high - action_low
 
         # Initialize any other variables here
 
@@ -35,6 +36,7 @@ class Actor:
         net = layers.Dense(units=32, activation='relu')(net)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
+
 
         # Add final output layer with sigmoid activation
         raw_actions = layers.Dense(units=self.action_size, activation='sigmoid',
@@ -54,7 +56,7 @@ class Actor:
         # Incorporate any additional losses here (e.g. from regularizers)
 
         # Define optimizer and training function
-        optimizer = optimizers.Adam()
+        optimizer = optimizers.Adam(lr=0.005)
         updates_op = optimizer.get_updates(params=self.model.trainable_weights, loss=loss)
         self.train_fn = K.function(
             inputs=[self.model.input, action_gradients, K.learning_phase()],

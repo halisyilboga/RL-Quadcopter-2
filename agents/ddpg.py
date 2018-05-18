@@ -1,8 +1,8 @@
-
+from agents.actor import Actor
 from agents.critic import Critic
 from agents.ounoise import OUNoise
 from agents.replaybuffer import ReplayBuffer
-from agents.agent import Agent
+
 
 import numpy as np
 
@@ -42,16 +42,26 @@ class DDPG():
 
         # Algorithm parameters
         self.gamma = 0.99  # discount factor
-        self.tau = 0.01  # for soft update of target parameters
+        self.tau = 0.00025 #0.01  # for soft update of target parameters
+        
+        # Tracking score 
+        self.best_w = None
+        self.best_score = -np.inf
+        self.score = -np.inf
+        
 
     def reset_episode(self):
+        self.total_reward = 0.0
+        self.count = 0  
         self.noise.reset()
         state = self.task.reset()
         self.last_state = state
         return state
 
     def step(self, action, reward, next_state, done):
-         # Save experience / reward
+        # Save experience / reward
+        self.total_reward += reward
+        self.count += 1  
         self.memory.add(self.last_state, action, reward, next_state, done)
 
         # Learn, if enough samples are available in memory
@@ -70,7 +80,11 @@ class DDPG():
 
     def learn(self, experiences):
         """Update policy and value parameters using given batch of experience tuples."""
-        # Convert experience tuples to separate arrays for each element (states, actions, rewards, etc.)
+        # Convert experience tuples to separate arrays for each element (states, actions, rewards, etc.)      
+        self.score = self.total_reward / float(self.count) if self.count else 0.0
+        if self.score > self.best_score:
+            self.best_score = self.score
+        
         states = np.vstack([e.state for e in experiences if e is not None])
         actions = np.array([e.action for e in experiences if e is not None]).astype(np.float32).reshape(-1, self.action_size)
         rewards = np.array([e.reward for e in experiences if e is not None]).astype(np.float32).reshape(-1, 1)
