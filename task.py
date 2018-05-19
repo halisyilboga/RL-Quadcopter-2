@@ -26,15 +26,34 @@ class Task():
         self.action_size = 4
         
         # Goal
-        self.target_pos = target_pos if target_pos is not None else np.array([10., 10., 10.]) 
+        self.target_pos = target_pos if target_pos is not None else np.array([15., 15., 15.]) 
     
 
     def get_reward(self):
         
       
-        reward = (1.01 -  math.tanh( abs(self.target_pos[0] - self.sim.pose[3]))) * (1.01 - math.tanh( abs(self.target_pos[1]  - self.sim.pose[4]))) * (1.01 - math.tanh( abs(self.target_pos[2]  - self.sim.pose[5])))
-        
+        reward = (1.1 -  math.tanh( abs(self.target_pos[0] - self.sim.pose[0]))) * (1.1 - math.tanh( abs(self.target_pos[1]  - self.sim.pose[1]))) * (1.1 - math.tanh( abs(self.target_pos[2]  - self.sim.pose[2])))
+        reward = -0.1 * abs(self.sim.pose[3:5]).sum()    #penalise non zero pitch and roll to keep broadly level
         return reward
+    
+    def get_reward1(self):
+        """Uses current pose of sim to return reward."""
+        # reward = 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
+        # refine reward to encourage flying for as long as possible and favour accuracy in z slightly
+        #reward = 25 - 0.1*abs(self.sim.pose[:2] - self.target_pos[:2]).sum() \
+        #    - 5*abs(self.sim.pose[2] - self.target_pos[2]) \
+        #    - 0.1*abs(self.sim.v[3:6]).sum() \
+        #    - 1*abs(self.sim.angular_v[0:2]).sum()
+        #reward = 1 - abs(self.sim.pose[2] - self.target_pos[2]) - 0.02 * abs(self.sim.angular_v[0:2]).sum()
+        
+        reward = -0.5 + 1.1 * np.exp(0-(self.sim.pose[2] - self.target_pos[2])**2 / 64) \
+            +0.15 * np.exp(0-(self.sim.pose[0] - self.target_pos[0])**2 / 81)  \
+            +0.15 * np.exp(0-(self.sim.pose[1] - self.target_pos[1])**2 / 81)  \
+            -0.01 * ((self.sim.pose[3])**2 + (self.sim.pose[4])**2)
+            #- 0.1 * abs(self.sim.pose[3:5]).sum()    #penalise non zero pitch and roll to keep broadly level
+            #- 0.05 * abs(self.sim.v[3:6]).sum()       \
+        return reward
+    
     
 
     def step(self, rotor_speeds):
