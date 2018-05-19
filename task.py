@@ -24,22 +24,15 @@ class Task():
         self.action_low = 0.01 #divide by zero
         self.action_high = 900
         self.action_size = 4
-
-        # Goal
-        self.target_pos = target_pos if target_pos is not None else np.array([0., 0., 10.]) 
-
-    def get_reward1(self):
-        """Uses current pose of sim to return reward."""
-        reward = 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
-        #reward = np.tanh(self.sim.v[2])
-        return reward
-    def get_reward(self):
-       
-        reward = 1
         
-        penalty = (1. - abs(math.sin(self.sim.pose[3]))) * (1. - abs(math.sin(self.sim.pose[4]))) * (1. - abs(math.sin(self.sim.pose[5])))
+        # Goal
+        self.target_pos = target_pos if target_pos is not None else np.array([10., 10., 10.]) 
     
-        reward *= penalty
+
+    def get_reward(self):
+        
+      
+        reward = (1.01 -  math.tanh( abs(self.target_pos[0] - self.sim.pose[3]))) * (1.01 - math.tanh( abs(self.target_pos[1]  - self.sim.pose[4]))) * (1.01 - math.tanh( abs(self.target_pos[2]  - self.sim.pose[5])))
         
         return reward
     
@@ -53,8 +46,10 @@ class Task():
             reward += self.get_reward() 
             pose_all.append(self.sim.pose)
             
+           
             if done :
-                reward += 100
+                reward += 20
+                
                 
         next_state = np.concatenate(pose_all)
         return next_state, reward, done
